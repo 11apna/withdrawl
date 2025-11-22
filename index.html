@@ -286,7 +286,7 @@ withdrawBtn.onclick = function () {
         }
     }
 
-    let balance = parseInt(localStorage.getItem("user_balance")) || 0;
+    let balance = parseInt(localStorage.getItem("userbalance")) || 0;
 
     if (balance < amount) {
         showPopup("Insufficient Balance! Your balance: ₹" + balance);
