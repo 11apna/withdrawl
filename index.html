@@ -1,396 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Withdraw</title>
-<style>
-    body {
-        margin: 0;
-        background: #0A0A0A;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        padding: 20px;
-    }
-
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .box {
-        background: #161616;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 10px #000;
-    }
-
-    input {
-        width: 100%;
-        padding: 12px;
-        margin-top: 10px;
-        border-radius: 10px;
-        border: none;
-        font-size: 16px;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    button {
-        width: 100%;
-        padding: 14px;
-        background: #0E6EB8;
-        border: none;
-        border-radius: 12px;
-        color: white;
-        font-size: 18px;
-        margin-top: 15px;
-        cursor: pointer;
-    }
-
-    button:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    /* SWITCH UI */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 120px;
-        height: 34px;
-    }
-
-    .switch input {
-        display: none;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #3C3C3C;
-        transition: .4s;
-        border-radius: 34px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
-
-    input:checked + .slider {
-        background-color: #0E6EB8;
-    }
-
-    input:checked + .slider:before {
-        transform: translateX(85px);
-    }
-
-    .slider:after {
-        content: 'BANK';
-        color: white;
-        position: absolute;
-        transform: translate(-50%,-50%);
-        top: 50%;
-        left: 50%;
-        font-size: 11px;
-    }
-
-    input:checked + .slider:after {
-        content: 'UPI';
-    }
-
-    /* POPUP */
-    #popup {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #202020;
-        padding: 20px;
-        border-radius: 14px;
-        text-align: center;
-        width: 80%;
-        display: none;
-        box-shadow: 0 0 20px #000;
-        z-index: 1000;
-    }
-
-    #popup button {
-        background: #0E6EB8;
-        margin-top: 15px;
-    }
-    
-    /* Details Section */
-    .details-section {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: 10px;
-        background: #1e1e1e;
-        display: none;
-    }
-    
-    .details-section.active {
-        display: block;
-    }
-    
-    .details-section h3 {
-        margin-top: 0;
-        margin-bottom: 15px;
-        font-size: 18px;
-    }
-    
-    .input-group {
-        margin-bottom: 15px;
-    }
-    
-    .input-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #ccc;
-    }
-</style>
-</head>
-<body>
-
-<h2>Withdraw Money</h2>
-
-<div class="box">
-    <label class="switch">
-        <input type="checkbox" id="methodSwitch">
-        <span class="slider"></span>
-    </label>
-
-    <p style="margin-top: 10px;">Current Method: <b id="methodText">BANK</b></p>
-
-    <input type="number" id="amount" placeholder="Enter amount (Min 300 - Max 120000)">
-    
-    <!-- Bank Details Section -->
-    <div id="bankDetails" class="details-section active">
-        <h3>Bank Details</h3>
-        <div class="input-group">
-            <label for="bankName">Bank Name</label>
-            <input type="text" id="bankName" placeholder="Enter bank name">
-        </div>
-        <div class="input-group">
-            <label for="accountNumber">Account Number</label>
-            <input type="text" id="accountNumber" placeholder="Enter account number">
-        </div>
-        <div class="input-group">
-            <label for="ifscCode">IFSC Code</label>
-            <input type="text" id="ifscCode" placeholder="Enter IFSC code">
-        </div>
-    </div>
-    
-    <!-- UPI Details Section -->
-    <div id="upiDetails" class="details-section">
-        <h3>UPI Details</h3>
-        <div class="input-group">
-            <label for="upiId">UPI ID</label>
-            <input type="text" id="upiId" placeholder="Enter UPI ID (e.g., name@upi)">
-        </div>
-    </div>
-    
-    <button id="withdrawBtn">Proceed Withdrawal</button>
-</div>
-
-<div id="popup">
-    <h3 id="popupMsg"></h3>
-    <button onclick="closePopup()">OK</button>
-</div>
-
-<script>
-let withdrawBtn = document.getElementById("withdrawBtn");
-let amountInput = document.getElementById("amount");
-let methodText = document.getElementById("methodText");
-let methodSwitch = document.getElementById("methodSwitch");
-let bankDetails = document.getElementById("bankDetails");
-let upiDetails = document.getElementById("upiDetails");
-
-// Update method name and details section on toggle
-methodSwitch.addEventListener("change", function () {
-    methodText.innerText = this.checked ? "UPI" : "BANK";
-    
-    if (this.checked) {
-        bankDetails.classList.remove("active");
-        upiDetails.classList.add("active");
-    } else {
-        upiDetails.classList.remove("active");
-        bankDetails.classList.add("active");
-    }
-});
-
-// Popup System
-function showPopup(msg) {
-    document.getElementById("popupMsg").innerText = msg;
-    document.getElementById("popup").style.display = "block";
-}
-function closePopup() {
-    document.getElementById("popup").style.display = "none";
-}
-
-// Withdrawal Button
-withdrawBtn.onclick = function () {
-    let amount = parseInt(amountInput.value);
-    let method = methodText.innerText;
-
-    if (!amount || amount < 300 || amount > 120000) {
-        showPopup("Enter valid amount (300 - 120000)");
-        return;
-    }
-
-    // Validate method-specific details
-    if (method === "BANK") {
-        let bankName = document.getElementById("bankName").value.trim();
-        let accountNumber = document.getElementById("accountNumber").value.trim();
-        let ifscCode = document.getElementById("ifscCode").value.trim();
-        
-        if (!bankName || !accountNumber || !ifscCode) {
-            showPopup("Please fill all bank details");
-            return;
-        }
-        
-        if (accountNumber.length < 9 || accountNumber.length > 18) {
-            showPopup("Please enter a valid account number");
-            return;
-        }
-        
-        if (ifscCode.length !== 11) {
-            showPopup("Please enter a valid IFSC code");
-            return;
-        }
-    } else if (method === "UPI") {
-        let upiId = document.getElementById("upiId").value.trim();
-        
-        if (!upiId) {
-            showPopup("Please enter UPI ID");
-            return;
-        }
-        
-        if (!upiId.includes("@")) {
-            showPopup("Please enter a valid UPI ID (e.g., name@upi)");
-            return;
-        }
-    }
-
-    let balance = parseInt(localStorage.getItem("user_balance")) || 0;
-
-    if (balance < amount) {
-        showPopup("Insufficient Balance! Your balance: ₹" + balance);
-        return;
-    }
-
-    // Deduct balance
-    localStorage.setItem("user_balance", balance - amount);
-
-    // Redirect to process page
-    window.location.href = "/wdc#" + amount + "#" + method;
-};
-</script>
-
-</body>
-</html>
-<!-- Floating Top Bar with Image + PRO -->
+<!-- Floating Top Bar -->
 <div class="killer-top-bar">
   <div class="brand-box">
-
-    <!-- Brand Image -->
-    <img src="https://d13ir53smqqeyp.cloudfront.net/d11-static-pages/images/dream11LogoWhite.webp" class="brand-img" alt="Brand Logo">
-
-    <!-- PRO Text -->
+    <img src="https://d13ir53smqqeyp.cloudfront.net/d11-static-pages/images/dream11LogoWhite.webp" class="brand-img">
     <span class="pro-badge">PRO</span>
-
   </div>
 
-  <a href="/login" class="login-btn">+ Login / Signup</a>
-</div>
+  <!-- Username center -->
+  <span id="userName" class="user-name"></span>
 
+  <!-- Wallet right -->
+  <button id="walletBtn" class="wallet-btn">₹0</button>
+</div>
 
 <style>
 .killer-top-bar{
-  position: fixed;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 760px;
-  height: 62px;
+  position: fixed;top: 14px;left: 50%;transform: translateX(-50%);
+  width: calc(100% - 32px);max-width: 760px;height: 62px;
   background: linear-gradient(180deg, rgba(10,12,20,0.85), rgba(12,14,24,0.6));
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;border: 1px solid rgba(255,255,255,0.05);
   backdrop-filter: blur(8px) saturate(120%);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.45), 0 0 30px rgba(0,255,209,0.08);
+  display: flex;align-items: center;justify-content: space-between;
+  padding: 0 14px;box-shadow: 0 10px 26px rgba(0,0,0,0.45);
   z-index: 9999999;
-  -webkit-tap-highlight-color: transparent;
 }
-
-.brand-box{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-img{
-  width: 115px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));
-}
-
-/* PRO badge */
-.pro-badge{
-  font-size: 14px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #ff006a, #ff7e00);
-  padding: 3px 10px;
-  border-radius: 8px;
-  color: #fff;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  box-shadow: 0 0 12px rgba(255,0,98,0.35);
-}
-
-.login-btn{
-  background: linear-gradient(90deg, rgba(122,95,255,0.22), rgba(0,255,209,0.18));
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-size: 13px;
-  text-decoration: none;
-  font-weight: 700;
-  color: #fff;
-  transition: 0.25s;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-.login-btn:hover{
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(122,95,255,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-
-@media (max-width:420px){
-  .killer-top-bar{ height: 56px; border-radius: 12px; }
-  .brand-img{ width: 90px; }
-  .pro-badge{ font-size: 11px; padding: 3px 8px; }
-  .login-btn{ padding:6px 10px; font-size:12px; }
+.brand-box{display: flex;align-items:center;gap:8px;}
+.brand-img{width:115px;filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));}
+.pro-badge{background:linear-gradient(90deg,#ff006a,#ff7e00);padding:3px 10px;border-radius:8px;color:#fff;font-size:13px;font-weight:700;}
+.user-name{position:absolute;left:50%;transform:translateX(-50%);font-size:15px;font-weight:700;color:#fff;text-transform:capitalize;}
+.wallet-btn{
+  background:linear-gradient(90deg,rgba(0,255,209,0.22),rgba(122,95,255,0.22));
+  padding:8px 14px;border-radius:12px;font-size:14px;font-weight:700;
+  border:1px solid rgba(255,255,255,0.1);color:#fff;
 }
 </style>
+
+<script>
+(function() {
+  const walletBtn = document.getElementById("walletBtn");
+  const userName = document.getElementById("userName");
+
+  // Read hash: #username#balance
+  let hash = location.hash.replace("#", "");
+  if (hash.includes("#")) {
+    const parts = hash.split("#");
+    const u = parts[0] || "";
+    const b = parts[1] || "0";
+
+    if (u) localStorage.setItem("APP_USER", u);
+    if (b && !isNaN(b)) localStorage.setItem("APP_BALANCE", b);
+
+    // Remove hash from URL
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+
+  // Load saved values
+  const savedUser = localStorage.getItem("APP_USER") || "Guest";
+  const savedBal = localStorage.getItem("APP_BALANCE") || "0";
+
+  userName.textContent = savedUser;
+  walletBtn.textContent = "₹" + savedBal;
+
+})();
+</script>
+
+<!-- Floating full-width bottom nav with custom "killer" SVG icons. Paste this anywhere (no <body> wrapper required). -->
+
 <nav class="killer-bottom-nav" role="navigation" aria-label="Main">
   <a class="nav-link" href="/home" aria-label="Home">
     <!-- Home SVG -->
