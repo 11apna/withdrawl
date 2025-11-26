@@ -1,4 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Withdraw</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
 
+    h2 {
+      text-align: center;
+      margin-top: 10%;
+      margin-bottom: 20px;
+    }
+
+    .withdraw-box {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 18px;
+      margin-top: 8px;
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    .warning {
+      color: #ff4d4d;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #withdrawBtn {
+      margin-top: 25px;
+      width: 100%;
+      padding: 16px;
+      font-size: 20px;
+      border: none;
+      background: #00eaff;
+      color: #000;
+      border-radius: 12px;
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      font-weight: bold;
+    }
+
+    #withdrawBtn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      background: #111;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Withdraw Money</h2>
+
+  <div class="withdraw-box">
+    <label>Enter Amount (₹300 – ₹1,00,000)</label>
+    <input type="number" id="amountInput" placeholder="Min ₹300" min="300" max="100000">
+    <div class="warning" id="warningText"></div>
+  </div>
+
+  <button id="withdrawBtn">Withdraw Now</button>
+
+  <div class="info-box">
+    ⚠️ Daily Limit: ₹1,00,000 | Max 4 withdrawals in 24 hours
+  </div>
+
+  <script>
+    const amountInput = document.getElementById('amountInput');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const warningText = document.getElementById('warningText');
+
+    // Dummy data - replace with real localStorage or backend
+    const userBalance = parseInt(localStorage.getItem("APP_BALANCE") || "5000");
+    const todayWithdrawals = JSON.parse(localStorage.getItem("WITHDRAWALS_TODAY") || "[]");
+
+    const MAX_DAILY_WITHDRAWALS = 4;
+    const MIN_WITHDRAW = 300;
+    const MAX_WITHDRAW = 100000;
+
+    function isValidWithdrawal(amount) {
+      const now = Date.now();
+      const last24h = todayWithdrawals.filter(ts => now - ts < 24 * 60 * 60 * 1000);
+      const total24h = last24h.length;
+
+      if (total24h >= MAX_DAILY_WITHDRAWALS) {
+        return { valid: false, msg: "❌ You have reached the daily withdrawal limit (4 times)." };
+      }
+      if (amount < MIN_WITHDRAW) {
+        return { valid: false, msg: `❌ Minimum withdrawal is ₹${MIN_WITHDRAW}.` };
+      }
+      if (amount > MAX_WITHDRAW) {
+        return { valid: false, msg: `❌ Maximum withdrawal is ₹${MAX_WITHDRAW}.` };
+      }
+      if (amount > userBalance) {
+        return { valid: false, msg: "❌ Insufficient balance." };
+      }
+
+      return { valid: true };
+    }
+
+    amountInput.addEventListener("input", () => {
+      const val = parseInt(amountInput.value);
+      if (!val) {
+        warningText.style.display = "none";
+        withdrawBtn.classList.remove("active");
+        return;
+      }
+
+      const check = isValidWithdrawal(val);
+      if (!check.valid) {
+        warningText.textContent = check.msg;
+        warningText.style.display = "block";
+        withdrawBtn.classList.remove("active");
+      } else {
+        warningText.style.display = "none";
+        withdrawBtn.classList.add("active");
+      }
+    });
+
+    withdrawBtn.addEventListener("click", () => {
+      const amount = parseInt(amountInput.value);
+      const check = isValidWithdrawal(amount);
+      if (!check.valid) return;
+
+      // Save withdrawal timestamp
+      const updated = JSON.parse(localStorage.getItem("WITHDRAWALS_TODAY") || "[]");
+      updated.push(Date.now());
+      localStorage.setItem("WITHDRAWALS_TODAY", JSON.stringify(updated));
+
+      // Redirect to withdrawal confirmation
+      window.location.href = `/wc#${amount}`;
+    });
+  </script>
+
+</body>
+</html>
 
 <!-- Floating Top Bar -->
 <div class="killer-top-bar">
